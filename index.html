@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Дискретті математика - QUIZ</title>
+    <style>
+        :root {
+            --primary-color: #4A90E2;
+            --success-color: #2ECC71;
+            --error-color: #E74C3C;
+            --bg-color: #F5F7FA;
+            --card-bg: #FFFFFF;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .quiz-container {
+            background: var(--card-bg);
+            width: 90%;
+            max-width: 600px;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #E0E0E0;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        #progress {
+            width: 0%;
+            height: 100%;
+            background: var(--primary-color);
+            transition: width 0.3s ease;
+        }
+
+        .question-text {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+            color: #333;
+        }
+
+        .options-container {
+            display: grid;
+            gap: 12px;
+        }
+
+        .option-btn {
+            background: #fff;
+            border: 2px solid #E0E0E0;
+            padding: 15px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+            text-align: left;
+        }
+
+        .option-btn:hover {
+            border-color: var(--primary-color);
+            background: #F0F7FF;
+        }
+
+        .option-btn.correct {
+            background-color: var(--success-color) !important;
+            border-color: var(--success-color);
+            color: white;
+        }
+
+        .option-btn.wrong {
+            background-color: var(--error-color) !important;
+            border-color: var(--error-color);
+            color: white;
+        }
+
+        .score-screen { display: none; }
+        
+        .score-circle {
+            font-size: 3rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 20px 0;
+        }
+
+        button.restart-btn {
+            margin-top: 20px;
+            padding: 12px 30px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container" id="quiz-box">
+    <div class="progress-bar"><div id="progress"></div></div>
+    <div id="question-number" style="color: #888; margin-bottom: 10px;"></div>
+    
+    <div id="quiz-content">
+        <div class="question-text" id="question">Жүктелуде...</div>
+        <div class="options-container" id="options"></div>
+    </div>
+
+    <div class="score-screen" id="score-screen">
+        <h2>Тест аяқталды!</h2>
+        <div class="score-circle" id="final-score">0/0</div>
+        <p id="result-message"></p>
+        <button class="restart-btn" onclick="location.reload()">Қайта бастау</button>
+    </div>
+</div>
+
+<script>
+    // Данные вопросов (извлечены из вашего файла)
+    const questions = [
+        {
+            q: "Жиын анықтамасын беріңіз",
+            options: ["тұтастай қарастырылатын объектілер жиынтығы", "сәйкестігі тәжірибемен расталған сенімді білім", "дұрыс ойлаудың заңдылықтары мен формалары туралы ғылым", "өрнектерді түрлендірудің заңдары мен формалары туралы ғылым"],
+            correct: 0
+        },
+        {
+            q: "Логикада ∅ белгісі қандай мағына білдіреді?",
+            options: ["бос жиын", "қиылысу", "біріктіру", "айырмасы"],
+            correct: 0
+        },
+        {
+            q: "Логикада ∩ белгісі қандай мағына білдіреді?",
+            options: ["қиылысу", "бос жиын", "біріктіру", "айырмасы"],
+            correct: 0
+        }
+        // Вставьте сюда остальные вопросы из предыдущего списка
+    ];
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+
+    function initQuiz() {
+        showQuestion();
+    }
+
+    function showQuestion() {
+        const q = questions[currentQuestionIndex];
+        document.getElementById('question-number').innerText = `Сұрақ ${currentQuestionIndex + 1} / ${questions.length}`;
+        document.getElementById('question').innerText = q.q;
+        
+        const optionsDiv = document.getElementById('options');
+        optionsDiv.innerHTML = '';
+        
+        q.options.forEach((opt, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => handleAnswer(index, btn);
+            optionsDiv.appendChild(btn);
+        });
+
+        const progress = (currentQuestionIndex / questions.length) * 100;
+        document.getElementById('progress').style.width = progress + '%';
+    }
+
+    function handleAnswer(selectedIndex, btn) {
+        const correctIndex = questions[currentQuestionIndex].correct;
+        const allBtns = document.querySelectorAll('.option-btn');
+
+        // Отключаем кнопки после нажатия
+        allBtns.forEach(b => b.style.pointerEvents = 'none');
+
+        if (selectedIndex === correctIndex) {
+            btn.classList.add('correct');
+            score++;
+        } else {
+            btn.classList.add('wrong');
+            allBtns[correctIndex].classList.add('correct');
+        }
+
+        setTimeout(() => {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                showQuestion();
+            } else {
+                showResults();
+            }
+        }, 1200); // Пауза 1.2 сек перед следующим вопросом
+    }
+
+    function showResults() {
+        document.getElementById('quiz-content').style.display = 'none';
+        document.getElementById('question-number').style.display = 'none';
+        document.getElementById('progress').style.width = '100%';
+        
+        const scoreScreen = document.getElementById('score-screen');
+        scoreScreen.style.display = 'block';
+        document.getElementById('final-score').innerText = `${score} / ${questions.length}`;
+        
+        let msg = "";
+        const percent = (score / questions.length) * 100;
+        if (percent >= 80) msg = "Керемет нәтиже! 🌟";
+        else if (percent >= 50) msg = "Жақсы, бірақ әлі де іздену керек. 👍";
+        else msg = "Көбірек дайындалу қажет. 📚";
+        document.getElementById('result-message').innerText = msg;
+    }
+
+    initQuiz();
+</script>
+
+</body>
+</html>
